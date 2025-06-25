@@ -11,10 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var tf TorrentFile
-
-func openJSONTorrent(t *testing.T) bencodeTorrent {
-	file, err := os.Open("test-data/archlinux-2019.12.01-x86_64.iso.json")
+func openJSONTorrent(t *testing.T, path string) bencodeTorrent {
+	file, err := os.Open(path)
 	assert.Nil(t, err)
 	defer file.Close()
 
@@ -31,35 +29,33 @@ func openJSONTorrent(t *testing.T) bencodeTorrent {
 	return jsonTorrent
 }
 
-func TestMain(m *testing.M) {
-	var err error
-	tf, err = Open("test-data/archlinux-2019.12.01-x86_64.iso.torrent")
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-	code := m.Run()
-	os.Exit(code)
-}
+func TestTorrentFile(t *testing.T) {
+	//open files
+	jsonTorrent := openJSONTorrent(t, "test-data/archlinux-2019.12.01-x86_64.iso.json")
+	tf, err := Open("test-data/archlinux-2019.12.01-x86_64.iso.torrent")
+	assert.Nil(t, err)
 
-func TestTorrent(t *testing.T) {
-	jsonTorrent := openJSONTorrent(t)
-
+	//check identitcal fields
 	assert.Equal(t, tf.Announce, jsonTorrent.Announce)
 	assert.Equal(t, tf.Name, jsonTorrent.Info.Name)
 	assert.Equal(t, tf.Length, jsonTorrent.Info.Length)
 	assert.Equal(t, tf.PieceLength, jsonTorrent.Info.PieceLength)
 
+	//remove spaces
 	splitPieces := strings.Split(jsonTorrent.Info.Pieces, " ")
 	jsonTorrent.Info.Pieces = strings.Join(splitPieces, "")
+
+	//store as byte array
 	pieces, err := hex.DecodeString(jsonTorrent.Info.Pieces)
 	jsonTorrent.Info.Pieces = string(pieces)
 	assert.Nil(t, err)
 
+	//check infohash
 	infoHash, err := jsonTorrent.Info.hash()
 	assert.Equal(t, tf.InfoHash, infoHash)
 	assert.Nil(t, err)
 
+	//check piece hashes
 	pieceHashes, err := jsonTorrent.Info.splitPieces()
 	assert.Nil(t, err)
 	for i, hash := range tf.PieceHashes {
