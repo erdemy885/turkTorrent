@@ -12,18 +12,22 @@ import (
 )
 
 func openJSONTorrent(t *testing.T, path string) bencodeTorrent {
+	//open file
 	file, err := os.Open(path)
 	assert.Nil(t, err)
 	defer file.Close()
 
+	//get file stats
 	fileStats, err := file.Stat()
 	assert.Nil(t, err)
 
+	//read file into buffer
 	fileBuffer := make([]byte, fileStats.Size())
 	bytesRead, err := file.Read(fileBuffer)
-	assert.Nil(t, err)
 	assert.Equal(t, fileStats.Size(), int64(bytesRead))
+	assert.Nil(t, err)
 
+	//unmarshal file
 	var jsonTorrent bencodeTorrent
 	json.Unmarshal(fileBuffer, &jsonTorrent)
 	return jsonTorrent
@@ -64,5 +68,4 @@ func TestTorrentFile(t *testing.T) {
 			assert.Equal(t, hashByte, pieceHashes[i][j])
 		}
 	}
-
 }
