@@ -31,16 +31,12 @@ type TorrentFile struct {
 }
 
 func (bto *bencodeTorrent) toTorrentFile() (TorrentFile, error) {
-	var infoHash [20]byte
-	var pieces [][20]byte
-	var err error
-
-	infoHash, err = bto.Info.hash()
+	infoHash, err := bto.Info.hash()
 	if err != nil {
 		return TorrentFile{}, err
 	}
 
-	pieces, err = bto.Info.splitPieces()
+	pieces, err := bto.Info.splitPieces()
 	if err != nil {
 		return TorrentFile{}, err
 	}
