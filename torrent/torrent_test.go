@@ -35,8 +35,8 @@ func openJSONTorrent(t *testing.T, path string) bencodeTorrent {
 
 func TestTorrentFile(t *testing.T) {
 	//open files
-	jsonTorrent := openJSONTorrent(t, "test-data/archlinux-2019.12.01-x86_64.iso.json")
-	tf, err := Open("test-data/archlinux-2019.12.01-x86_64.iso.torrent")
+	jsonTorrent := openJSONTorrent(t, "test-data/debian-12.11.0-amd64-netinst.iso.json")
+	tf, err := Open("test-data/debian-12.11.0-amd64-netinst.iso.torrent")
 	assert.Nil(t, err)
 
 	//check identitcal fields
