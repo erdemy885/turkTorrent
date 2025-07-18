@@ -11,11 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type trackerResponse struct {
-	Interval int    `bencode:"interval"`
-	Peers    string `bencode:"peers"`
-}
-
 func TestTracker(t *testing.T) {
 	tf, err := Open("test-data/debian-12.11.0-amd64-netinst.iso.torrent")
 	assert.Nil(t, err)
