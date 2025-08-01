@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"strconv"
+	"time"
 )
 
 type Peer struct {
@@ -26,4 +28,16 @@ func Unmarshal(peersBin []byte) ([]Peer, error) {
 		peers[i].Port = binary.BigEndian.Uint16(peersBin[offset+4 : offset+6])
 	}
 	return peers, nil
+}
+
+func (peer *Peer) String() string {
+	return net.JoinHostPort(peer.IP.String(), strconv.Itoa(int(peer.Port)))
+}
+
+func (peer *Peer) startConnection() (net.Conn, error) {
+	conn, err := net.DialTimeout("tcp", peer.String(), 3*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	return conn, err
 }
