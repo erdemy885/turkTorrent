@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"strconv"
-	"time"
 )
 
 type Peer struct {
@@ -32,12 +31,4 @@ func Unmarshal(peersBin []byte) ([]Peer, error) {
 
 func (peer *Peer) String() string {
 	return net.JoinHostPort(peer.IP.String(), strconv.Itoa(int(peer.Port)))
-}
-
-func (peer *Peer) Connect() (net.Conn, error) {
-	conn, err := net.DialTimeout("tcp", peer.String(), 3*time.Second)
-	if err != nil {
-		return nil, err
-	}
-	return conn, err
 }

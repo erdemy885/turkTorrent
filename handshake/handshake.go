@@ -6,10 +6,9 @@ import (
 )
 
 type Handshake struct {
-	Pstr       string
-	Extensions [8]byte
-	InfoHash   [20]byte
-	PeerID     [20]byte
+	Pstr     string
+	InfoHash [20]byte
+	PeerID   [20]byte
 }
 
 func (h *Handshake) Serialize() []byte {
@@ -48,19 +47,24 @@ func Read(r io.Reader) (*Handshake, error) {
 		return nil, err
 	}
 
-	var extensions [8]byte
-	copy(extensions[:], handshakeBuf[pstrlen:pstrlen+8])
-
 	var infoHash, peerID [20]byte
 	copy(infoHash[:], handshakeBuf[pstrlen+8:pstrlen+8+20])
 	copy(peerID[:], handshakeBuf[pstrlen+8+20:])
 
 	h := Handshake{
-		Pstr:       pstr,
-		Extensions: extensions,
-		InfoHash:   infoHash,
-		PeerID:     peerID,
+		Pstr:     pstr,
+		InfoHash: infoHash,
+		PeerID:   peerID,
 	}
 
 	return &h, nil
+}
+
+func New(infoHash, peerID [20]byte) *Handshake {
+	hs := Handshake{
+		Pstr:     "BitTorrent protocol",
+		InfoHash: infoHash,
+		PeerID:   peerID,
+	}
+	return &hs
 }

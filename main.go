@@ -21,10 +21,9 @@ func main() {
 
 	peers, err := tf.GetPeers(id, 8888)
 	hs := handshake.Handshake{
-		Pstr:       "BitTorrent protocol",
-		Extensions: [8]byte{0, 0, 0, 0, 0, 0, 0, 0},
-		PeerID:     id,
-		InfoHash:   tf.InfoHash,
+		Pstr:     "BitTorrent protocol",
+		PeerID:   id,
+		InfoHash: tf.InfoHash,
 	}
 	for _, peer := range peers {
 		connection, err := peer.Connect()
