@@ -2,6 +2,7 @@ package message
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 )
 
@@ -74,4 +75,73 @@ func FormatHave(index int) *Message {
 	payload := make([]byte, 4)
 	binary.BigEndian.PutUint32(payload[:], uint32(index))
 	return &Message{ID: MsgHave, Payload: payload}
+}
+
+func (m *Message) name() string {
+	if m == nil {
+		return "KeepAlive"
+	}
+	switch m.ID {
+	case MsgChoke:
+		return "Choke"
+	case MsgUnchoke:
+		return "Unchoke"
+	case MsgInterested:
+		return "Interested"
+	case MsgNotInterested:
+		return "NotInterested"
+	case MsgHave:
+		return "Have"
+	case MsgBitfield:
+		return "Bitfield"
+	case MsgRequest:
+		return "Request"
+	case MsgPiece:
+		return "Piece"
+	case MsgCancel:
+		return "Cancel"
+	default:
+		return fmt.Sprintf("Unknown#%d", m.ID)
+	}
+}
+
+func (m *Message) String() string {
+	if m == nil {
+		return m.name()
+	}
+	return fmt.Sprintf("%s [%d]", m.name(), len(m.Payload))
+}
+
+func ParseHave(m *Message) (int, error) {
+	if m.ID != MsgHave {
+		return 0, fmt.Errorf("expected Have (ID %d) but got ID %d", MsgHave, m.ID)
+	}
+	if len(m.Payload) != 4 {
+		return 0, fmt.Errorf("expected payload length was 4 but got %d", len(m.Payload))
+	}
+	index := int(binary.BigEndian.Uint32(m.Payload))
+	return index, nil
+}
+
+func ParsePiece(index int, buf []byte, msg *Message) (int, error) {
+	if msg.ID != MsgPiece {
+		return 0, fmt.Errorf("expected Piece (ID %d) but got ID %d", MsgPiece, msg.ID)
+	}
+	if len(msg.Payload) < 8 {
+		return 0, fmt.Errorf("payload too short, %d < 8", len(msg.Payload))
+	}
+	parsedIndex := int(binary.BigEndian.Uint32(msg.Payload[:4]))
+	if parsedIndex != index {
+		return 0, fmt.Errorf("expected index %d, but got %d", index, parsedIndex)
+	}
+	begin := int(binary.BigEndian.Uint32(msg.Payload[4:8]))
+	if begin >= len(buf) {
+		return 0, fmt.Errorf("begin offset too high %d >= %d", begin, len(buf))
+	}
+	data := msg.Payload[8:]
+	if begin+len(data) > len(buf) {
+		return 0, fmt.Errorf("not enough space in buffer of size %d for data of size %d starting at offset %d", len(buf), len(data), begin)
+	}
+	copy(buf[begin:], data)
+	return len(data), nil
 }

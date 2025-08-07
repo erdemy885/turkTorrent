@@ -51,10 +51,10 @@ func getBitfield(conn net.Conn) (bitfield.Bitfield, error) {
 		return nil, err
 	}
 	if msg == nil {
-		return nil, fmt.Errorf("Expected bitfield but got keepalive message")
+		return nil, fmt.Errorf("expected bitfield but got keepalive message")
 	}
 	if msg.ID != message.MsgBitfield {
-		return nil, fmt.Errorf("Expected bitfield but got %s", msg)
+		return nil, fmt.Errorf("expected bitfield but got %s", msg)
 	}
 	return msg.Payload, nil
 }
