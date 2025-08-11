@@ -116,7 +116,7 @@ func (c *Client) SendHave(index int) error {
 	return err
 }
 
-func (c *Client) FormatRequest(index, begin, length int) error {
+func (c *Client) SendRequest(index, begin, length int) error {
 	msg := message.FormatRequest(index, begin, length)
 	_, err := c.Conn.Write(msg.Serialize())
 	return err
