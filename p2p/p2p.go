@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"log"
+	"runtime"
 	"time"
 
 	"github.com/erdemy885/turkTorrent/client"
@@ -152,7 +153,7 @@ func (t *Torrent) startWorker(peer peers.Peer, workQueue chan *pieceWork, result
 		if err != nil {
 			//network issue
 			//can try again with same peer
-			log.Printf("Piece #%d failed integrity check", pw.index)
+			log.Printf("Piece #%d failed integrity check\n", pw.index)
 			workQueue <- pw
 			continue
 		}
@@ -160,4 +161,48 @@ func (t *Torrent) startWorker(peer peers.Peer, workQueue chan *pieceWork, result
 		c.SendHave(pw.index)
 		results <- &pieceResult{pw.index, buf}
 	}
+}
+
+func (t *Torrent) getPieceBounds(index int) (begin, end int) {
+	begin = index * t.PieceLength
+	end = min(begin+t.PieceLength, t.Length)
+	return begin, end
+}
+
+func (t *Torrent) getPieceSize(index int) int {
+	begin, end := t.getPieceBounds(index)
+	return end - begin
+}
+
+func (t *Torrent) Download() ([]byte, error) {
+	log.Println("Starting download for ", t.Name)
+
+	workQueue := make(chan *pieceWork, len(t.PieceHashes))
+	results := make(chan *pieceResult)
+	for index, hash := range t.PieceHashes {
+		length := t.getPieceSize(index)
+		workQueue <- &pieceWork{index, hash, length}
+	}
+
+	for _, peer := range t.Peers {
+		go t.startWorker(peer, workQueue, results)
+	}
+
+	buf := make([]byte, t.Length)
+	donePieces := 0
+
+	for donePieces < len(t.PieceHashes) {
+		res := <-results
+		begin, end := t.getPieceBounds(res.index)
+		copy(buf[begin:end], res.buf)
+		donePieces++
+
+		percent := (float64(donePieces) / float64(len(t.PieceHashes))) * 100
+		numWorkers := runtime.NumGoroutine() - 1
+		log.Printf("(%0.2f%%) Downloaded piece #%d from %d peers\n", percent, res.index, numWorkers)
+	}
+
+	close(workQueue)
+
+	return buf, nil
 }
