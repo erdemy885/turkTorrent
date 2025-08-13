@@ -2,12 +2,16 @@ package torrent
 
 import (
 	"bytes"
+	"crypto/rand"
 	"crypto/sha1"
 	"fmt"
 	"os"
 
+	"github.com/erdemy885/turkTorrent/p2p"
 	"github.com/jackpal/bencode-go"
 )
+
+const Port uint16 = 6881
 
 type bencodeInfo struct {
 	Pieces      string `bencode:"pieces" json:"pieces"`
@@ -88,4 +92,43 @@ func Open(path string) (TorrentFile, error) {
 	}
 
 	return bto.toTorrentFile()
+}
+
+func (tf *TorrentFile) DownloadToFile(path string) error {
+	var peerID [20]byte
+	_, err := rand.Read(peerID[:])
+	if err != nil {
+		return err
+	}
+
+	peers, err := tf.GetPeers(peerID, Port)
+	if err != nil {
+		return err
+	}
+
+	torrent := p2p.Torrent{
+		Peers:       peers,
+		PeerID:      peerID,
+		InfoHash:    tf.InfoHash,
+		PieceHashes: tf.PieceHashes,
+		PieceLength: tf.PieceLength,
+		Length:      tf.Length,
+		Name:        tf.Name,
+	}
+
+	buf, err := torrent.Download()
+	if err != nil {
+		return err
+	}
+
+	outFile, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
+	_, err = outFile.Write(buf)
+	if err != nil {
+		return err
+	}
+	return nil
 }

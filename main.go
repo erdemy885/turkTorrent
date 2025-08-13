@@ -1,26 +1,23 @@
 package main
 
 import (
-	"crypto/rand"
-	"fmt"
+	"log"
+	"os"
 
 	"github.com/erdemy885/turkTorrent/torrent"
 )
 
 func main() {
-	tf, err := torrent.Open("debian-12.11.0-amd64-netinst.iso.torrent")
+	inPath := os.Args[1]
+	outPath := os.Args[2]
+
+	tf, err := torrent.Open(inPath)
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal(err)
 	}
 
-	var id [20]byte
-	rand.Read(id[:])
-
-	peers, err := tf.GetPeers(id, 8888)
+	err = tf.DownloadToFile(outPath)
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal(err)
 	}
-	fmt.Println(peers)
 }
