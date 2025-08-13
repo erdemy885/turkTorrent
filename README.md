@@ -1,5 +1,5 @@
-build with go build .
-run with ./turkTorrent torrent_file output_file
+build with `go build .`
+run with `./turkTorrent torrent_file output_file`
 
 only supports torrents with single file
 does not seed, only downloads
